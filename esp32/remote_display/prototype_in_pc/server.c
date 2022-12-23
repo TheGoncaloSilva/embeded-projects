@@ -1,18 +1,23 @@
-#include <stdio.h>
+#include <stdio.h>          // fprintf(), puts(), pclose()
+#include <unistd.h>         // close()
 #include <string.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
+#include <sys/socket.h>     // socket(), connect()
+#include <netinet/in.h>     // struct sockaddr_in
+#include <sys/types.h>      // AF_INET, SOCK_STREAM
+#include <arpa/inet.h>      // htons(), inet_addr()
 
 #define SUCCESS 1 << 0
 #define FAILURE 1 << 1
-#define MAX_INPUT 15
+#define MAX_MSG_LEN 256
+#define PORT 8080
+#define ADDRESS "127.0.0.1"
 
 int main(int argc, char const *argv[])
 {
     /* Instanciate objects */
-    int server_socket, client_socket, c;
-    struct sockaddr_in server, client;
-    char input[MAX_INPUT], recv_msg[MAX_INPUT];
+    int server_socket, client_socket, c, status;
+    struct sockaddr_in server, client; /* This struct is created in the stack, so it needs to be initialized befor use */
+    char input[MAX_MSG_LEN], recv_msg[MAX_MSG_LEN];
 
     // Create the socket
     if((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
@@ -21,11 +26,11 @@ int main(int argc, char const *argv[])
     }
 
     // Set the address and port to bind the socket to
-    
+    memset(&client, 0, sizeof(client));
     memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
-    server.sin_port = htons(8080);
-    server.sin_addr.s_addr = INADDR_ANY;//0x4c01a8c0;
+    server.sin_port = htons(PORT);
+    server.sin_addr.s_addr = inet_addr(ADDRESS); // INADDR_ANY;
 
     // Bind the socket to the address and port
     if( bind(server_socket, (struct sockaddr*)&server, sizeof(server)) < 0){
@@ -34,12 +39,15 @@ int main(int argc, char const *argv[])
     }
     
     // Listen for incoming connections
-    listen(server_socket, 5);
+    if(listen(server_socket, 3) < 0){
+        fprintf(stderr, "Listen failed");
+        return FAILURE;
+    }
 
-    fprintf(stdout, "Listenning on localhost:8080\n");
+    fprintf(stdout, "Listenning on %s:%d\n", ADDRESS, PORT);
 
     // Accept an incoming connection
-    if( client_socket = accept(server_socket,(struct sockaddr*)&client, (socklen_t*)&c) < 0 ){
+    if( (client_socket = accept(server_socket,(struct sockaddr*)&client, (socklen_t*)&c)) < 0 ){
         fprintf(stderr, "Failed client connection\n");
         return FAILURE;
     }
@@ -47,21 +55,32 @@ int main(int argc, char const *argv[])
 
     while (1){
         
+        /* Reset messages */
+        memset(&input, 0, sizeof(input));
+        memset(&recv_msg, 0, sizeof(recv_msg));
+
         fprintf(stdout, "Message to send: ");
         scanf("%s", input);
+
         // Send a response to the client
-        if(send(client_socket, input, strlen(input), 0) < 0)
+        if( (status = send(client_socket, input, strlen(input), 0)) <= 0)
             break;
 
         // Receive a message from the client
-        if(recv(client_socket, recv_msg, sizeof(recv_msg), 0) < 0)
+        if( (status = recv(client_socket, recv_msg, MAX_MSG_LEN, 0)) < 0)
             break;
 
-        puts("Received message: ");
-        puts(recv_msg);
+        fprintf(stdout, "Received from client: %s \n", recv_msg);
     }
 
-    fprintf(stdout, "Client disconnected\n");
+    if(status == 0){
+        fprintf(stdout, "Client disconnected\n");
+    }
+
+    if(status == 1){
+        fprintf(stdout, "Receive/Send error\n");
+        return FAILURE;
+    }
 
     // Close the client socket
     close(client_socket);
