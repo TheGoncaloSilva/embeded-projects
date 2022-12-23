@@ -5,6 +5,7 @@
 
 int main(int argc, char const *argv[])
 {
+    // guide at https://www.binarytides.com/server-client-example-c-sockets-linux/#comments
     // Create a socket
     int sock = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -17,17 +18,16 @@ int main(int argc, char const *argv[])
 
     // Connect to the server
     connect(sock, (struct sockaddr*) &addr, sizeof(addr));
+    while(1){
+        // Receive a message from the server
+        char response[1024];
+        recv(sock, response, sizeof(response), 0);
+        fprintf(stdout, "Received from the server: %s\n", response);
 
-    // Send a message to the server
-    char* message = "Hello, server!";
-    send(sock, message, strlen(message), 0);
-
-    // Receive a message from the server
-    char response[1024];
-    recv(sock, response, sizeof(response), 0);
-
-    // Print the received message
-    printf("Received from the server: %s\n", response);
+        // Send a message to the server
+        char* message = "Success";
+        send(sock, message, strlen(message), 0);
+    }
 
     // Close the socket
     close(sock);

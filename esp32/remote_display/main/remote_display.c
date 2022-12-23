@@ -190,7 +190,7 @@ esp_err_t connect_tcp_server(void)
 	bzero(readBuffer, sizeof(readBuffer));
     int r = read(sock, readBuffer, sizeof(readBuffer)-1);
     for(int i = 0; i < r; i++) {
-        putchar(readBuffer[i]);
+        putchar(readBuffer[i]); // write a string to stdout, up to, but not including null character
     }
 
     if (strcmp(readBuffer, "HELLO") == 0)

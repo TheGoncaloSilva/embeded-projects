@@ -5,56 +5,69 @@
 
 #define SUCCESS 1 << 0
 #define FAILURE 1 << 1
+#define MAX_INPUT 15
 
 int main(int argc, char const *argv[])
 {
-    // Create a socket
-    int sock = socket(AF_INET, SOCK_STREAM, 0);
+    /* Instanciate objects */
+    int server_socket, client_socket, c;
+    struct sockaddr_in server, client;
+    char input[MAX_INPUT], recv_msg[MAX_INPUT];
+
+    // Create the socket
+    if((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
+        fprintf(stderr, "Socket couldn't be created\n");
+        return FAILURE;
+    }
 
     // Set the address and port to bind the socket to
-    struct sockaddr_in addr;
-    memset(&addr, 0, sizeof(addr));
-    addr.sin_family = AF_INET;
-    addr.sin_port = htons(8080);
-    addr.sin_addr.s_addr = 0x4c01a8c0;
+    
+    memset(&server, 0, sizeof(server));
+    server.sin_family = AF_INET;
+    server.sin_port = htons(8080);
+    server.sin_addr.s_addr = INADDR_ANY;//0x4c01a8c0;
 
     // Bind the socket to the address and port
-    bind(sock, (struct sockaddr*) &addr, sizeof(addr));
-
-    // Listen for incoming connections
-    listen(sock, 2);
-
-    // Accept an incoming connection
-    int client_sock = accept(sock, NULL, NULL);
-
-
-    while (1){
-
-        // Send a response to the client
-        char* response = "HELLO, client!";
-        send(client_sock, response, strlen(response), 0);
-
-        // Receive a message from the client
-        char message[1024];
-        recv(client_sock, message, sizeof(message), 0);
+    if( bind(server_socket, (struct sockaddr*)&server, sizeof(server)) < 0){
+        fprintf(stderr, "Failure to create server\n");
+        return FAILURE;
     }
     
-    // Receive a message from the client
-    //char message[1024];
-    //recv(client_sock, message, sizeof(message), 0);
+    // Listen for incoming connections
+    listen(server_socket, 5);
 
-    // Print the received message
-    //printf("Received from the client: %s\n", message);
+    fprintf(stdout, "Listenning on localhost:8080\n");
 
-    // Send a response to the client
-    char* response = "HELLO, client!";
-    send(client_sock, response, strlen(response), 0);
+    // Accept an incoming connection
+    if( client_socket = accept(server_socket,(struct sockaddr*)&client, (socklen_t*)&c) < 0 ){
+        fprintf(stderr, "Failed client connection\n");
+        return FAILURE;
+    }
+    fprintf(stdout, "Client accepted\n");
+
+    while (1){
+        
+        fprintf(stdout, "Message to send: ");
+        scanf("%s", input);
+        // Send a response to the client
+        if(send(client_socket, input, strlen(input), 0) < 0)
+            break;
+
+        // Receive a message from the client
+        if(recv(client_socket, recv_msg, sizeof(recv_msg), 0) < 0)
+            break;
+
+        puts("Received message: ");
+        puts(recv_msg);
+    }
+
+    fprintf(stdout, "Client disconnected\n");
 
     // Close the client socket
-    close(client_sock);
+    close(client_socket);
 
     // Close the server socket
-    close(sock);
+    close(server_socket);
 
     return SUCCESS;
 }
