@@ -1,6 +1,7 @@
 #include <stdio.h>          // fprintf(), puts(), pclose()
 #include <unistd.h>         // close()
-#include <string.h>
+#include <string.h>         // strlen()
+#include <stdlib.h>         // atoi()
 #include <sys/socket.h>     // socket(), connect()
 #include <netinet/in.h>     // struct sockaddr_in
 #include <sys/types.h>      // AF_INET, SOCK_STREAM
@@ -14,10 +15,17 @@
 
 int main(int argc, char const *argv[])
 {
+
     /* Instanciate objects */
-    int server_socket, client_socket, c, status;
+    int server_socket, client_socket, c, status, port;
     struct sockaddr_in server, client; /* This struct is created in the stack, so it needs to be initialized befor use */
     char input[MAX_MSG_LEN], recv_msg[MAX_MSG_LEN];
+
+    // Check if an argument was provided
+    if (argc < 2)
+        port = PORT;
+    else
+        port = atoi(argv[1]); // Convert the argument to an integer
 
     // Create the socket
     if((server_socket = socket(AF_INET, SOCK_STREAM, 0)) == -1){
@@ -29,7 +37,7 @@ int main(int argc, char const *argv[])
     memset(&client, 0, sizeof(client));
     memset(&server, 0, sizeof(server));
     server.sin_family = AF_INET;
-    server.sin_port = htons(PORT);
+    server.sin_port = htons(port);
     server.sin_addr.s_addr = inet_addr(ADDRESS); // INADDR_ANY;
 
     // Bind the socket to the address and port
@@ -59,14 +67,14 @@ int main(int argc, char const *argv[])
         memset(&input, 0, sizeof(input));
         memset(&recv_msg, 0, sizeof(recv_msg));
 
-        fprintf(stdout, "Message to send: ");
+        fprintf(stdout, "Request to send: ");
         scanf("%s", input);
 
-        // Send a response to the client
+        // Send a request to the client
         if( (status = send(client_socket, input, strlen(input), 0)) <= 0)
             break;
 
-        // Receive a message from the client
+        // Receive a response from the client
         if( (status = recv(client_socket, recv_msg, MAX_MSG_LEN, 0)) < 0)
             break;
 
