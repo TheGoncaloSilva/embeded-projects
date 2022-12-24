@@ -21,6 +21,11 @@
 #define TCP_SUCCESS 1 << 0
 #define TCP_FAILURE 1 << 1
 #define MAX_FAILURES 10
+#define MAX_MSG_LEN 256
+#define PORT 8080
+#define ADDRESS "127.0.0.1"
+#define FALSE 0
+#define TRUE 1
 
 /** GLOBALS **/
 
@@ -160,15 +165,46 @@ esp_err_t connect_wifi()
     return status;
 }
 
+
+int check_request(char *request){
+    if(strlen(request) > 6)
+        return FALSE;
+
+    const char* approved = "123456789:";
+
+    for(int i = 0; i < strlen(request); i++){
+        int counter = 0;
+        for(int j = 0; j < strlen(approved); j++){
+            if(request[i] == approved[j])
+                counter++; 
+        }
+        if(!counter)
+            return FALSE; // Character not approved
+    }
+    return TRUE;
+}
+
+
+int handle_request(char *request){
+    if(!check_request(request))
+        return FALSE;
+
+    return TRUE;
+}
+
 // connect to the server and return the result
 esp_err_t connect_tcp_server(void)
 {
+    int status;
 	struct sockaddr_in serverInfo = {0};
-	char readBuffer[1024] = {0};
+	char request[MAX_MSG_LEN];
+    char* successResponse = "Success";
+    char* failureResponse = "Failure";
+    char* response = NULL;
 
 	serverInfo.sin_family = AF_INET;
 	serverInfo.sin_addr.s_addr = 0x4c01a8c0;//0x0100007f; -> Adresses need to be reversed
-	serverInfo.sin_port = htons(8080);
+	serverInfo.sin_port = htons(PORT);
 
 
 	int sock = socket(AF_INET, SOCK_STREAM, 0);
@@ -187,15 +223,26 @@ esp_err_t connect_tcp_server(void)
 	}
 
 	ESP_LOGI(TAG, "Connected to TCP server.");
-	bzero(readBuffer, sizeof(readBuffer));
-    int r = read(sock, readBuffer, sizeof(readBuffer)-1);
-    for(int i = 0; i < r; i++) {
-        putchar(readBuffer[i]); // write a string to stdout, up to, but not including null character
-    }
 
-    if (strcmp(readBuffer, "HELLO") == 0)
-    {
-    	ESP_LOGI(TAG, "WE DID IT!");
+    while(1){
+        /// Periodic let OS execute other tasks
+        vTaskDelay(200 / portTICK_PERIOD_MS);
+
+        // Receive a message from the server
+        memset(&request, 0, sizeof(request)); // Reset buffer
+        if( (status = recv(sock, request, MAX_MSG_LEN, 0)) <= 0)
+            break;
+        
+        ESP_LOGI(TAG, "Received from server: %s\n", request);
+
+        // Send a message to the server
+        if(handle_request(request))
+            response = successResponse; // Response points to success
+        else
+            response = failureResponse; // Response points to failure
+
+        if((status = send(sock, response, strlen(response), 0)) < 0)
+            break;
     }
 
     return TCP_SUCCESS;

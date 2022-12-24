@@ -11,7 +11,7 @@
 #define FAILURE 1 << 1
 #define MAX_MSG_LEN 256
 #define PORT 8080
-#define ADDRESS "127.0.0.1"
+#define ADDRESS "192.168.1.76"//"127.0.0.1"
 
 int main(int argc, char const *argv[])
 {
