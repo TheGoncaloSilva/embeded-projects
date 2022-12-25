@@ -14,6 +14,7 @@
 #include "lwip/sys.h"
 #include "lwip/netdb.h"
 #include "lwip/dns.h"
+#include "i2c_oled_example_main.c"
 
 /** DEFINES **/
 #define WIFI_SUCCESS 1 << 0
@@ -38,6 +39,10 @@ static int s_retry_num = 0;
 // task tag
 static const char *TAG = "WIFI";
 /** FUNCTIONS **/
+
+/* Start I2C*/
+extern lv_disp_t *i2c_main();
+/* End I2C */
 
 //event handler for wifi events
 static void wifi_event_handler(void* arg, esp_event_base_t event_base,
@@ -192,6 +197,16 @@ int handle_request(char *request){
     return TRUE;
 }
 
+void example_lvgl_demo_ui(lv_disp_t *disp)
+{
+    lv_obj_t *scr = lv_disp_get_scr_act(disp);
+    lv_obj_t *label = lv_label_create(scr);
+    lv_label_set_long_mode(label, LV_LABEL_LONG_SCROLL_CIRCULAR); /* Circular scroll */
+    lv_label_set_text(label, "Hello Espressif, Hello LVGL.");
+    lv_obj_set_width(label, 128);
+    lv_obj_align(label, LV_ALIGN_TOP_MID, 0, 0);
+}
+
 // connect to the server and return the result
 esp_err_t connect_tcp_server(void)
 {
@@ -201,6 +216,7 @@ esp_err_t connect_tcp_server(void)
     char* successResponse = "Success";
     char* failureResponse = "Failure";
     char* response = NULL;
+    lv_disp_t *disp;
 
 	serverInfo.sin_family = AF_INET;
 	serverInfo.sin_addr.s_addr = 0x4c01a8c0;//0x0100007f; -> Adresses need to be reversed
@@ -224,6 +240,8 @@ esp_err_t connect_tcp_server(void)
 
 	ESP_LOGI(TAG, "Connected to TCP server.");
 
+    disp = i2c_main();
+
     while(1){
         /// Periodic let OS execute other tasks
         vTaskDelay(200 / portTICK_PERIOD_MS);
@@ -236,13 +254,21 @@ esp_err_t connect_tcp_server(void)
         ESP_LOGI(TAG, "Received from server: %s\n", request);
 
         // Send a message to the server
-        if(handle_request(request))
+        if(handle_request(request)){
             response = successResponse; // Response points to success
-        else
+            example_lvgl_demo_ui(disp);
+            while(1){
+                // raise the task priority of LVGL and/or reduce the handler period can improve the performance
+                vTaskDelay(pdMS_TO_TICKS(10));
+                // The task running lv_timer_handler should have lower priority than that running `lv_tick_inc`
+                lv_timer_handler();
+        }
+        }else
             response = failureResponse; // Response points to failure
 
         if((status = send(sock, response, strlen(response), 0)) < 0)
             break;
+
     }
 
     return TCP_SUCCESS;
