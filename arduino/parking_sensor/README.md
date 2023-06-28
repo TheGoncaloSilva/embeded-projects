@@ -20,7 +20,7 @@ In this project, was used:
 
 # Final Product
 More images and a video can also be checked in the repository directory
-![Screenshot](https://github.com/TheGoncaloSilva/embeded-projects/blob/main/parking_sensor/overall.jpg)
+![Screenshot](overall.jpg)
 
 
 
