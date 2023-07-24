@@ -1,6 +1,8 @@
 # The ESP32
 
-The ESP32 is cheap and reliable micro-controller used mostly for IOT applications. It support wifi and Bluetooth, including Bluetooth Low energy.
+The ESP32 is cheap and reliable micro-controller used mostly for IOT applications. It support wifi and Bluetooth, including Bluetooth Low energy. The following image retracts the pin layout of the board.
+
+![esp32 pins](./ESP32_devkit_1_pin_layout.png)
 
 ## Initial environment and chip configuration
 
