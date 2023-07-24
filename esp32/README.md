@@ -84,3 +84,13 @@ Press and Hold the **BOOT** button and execute
 ```
 esptool.py --chip esp32 --port /dev/ttyUSB0 erase_flash
 ```
+
+# Problems
+Problem connecting to port, specially in Arduino IDE [^1]. Give permission to access the port, by your user, with the following commands:
+
+```
+sudo adduser <username> dialout
+sudo chmod a+rw /dev/ttyUSB0
+```
+
+[^1]: https://stackoverflow.com/questions/73923341/unable-to-flash-esp32-the-port-doesnt-exist
