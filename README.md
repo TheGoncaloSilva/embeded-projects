@@ -1,5 +1,7 @@
-# embeded-projects
-Projects to test, develop embeded systems and related fields. Put in practice skills and ideas using sensors, actuators, arduino boards and other parts
+# Embedded Projects
 
-# Organization
-Each folder contains a project or side notes, you can check the folder with project that caught your attention. Inside each project folder, there are detailt, demos and the code used to create each project, as well any other resource needed
+Welcome to the Embedded Projects repository! This collection of projects aims to test and develop embedded systems, allowing you to put your skills and ideas into practice using various components such as sensors, actuators, Arduino boards, ESP32 boards and other electronic parts.
+
+# Folder Structure
+
+In this directory you will find folders for each of the tested boards. Within each project folder, you'll find detailed explanations, demos, and the source code used to create the respective project. Additionally, any other resources needed for the project will be provided. Feel free to explore what catches your attention.
