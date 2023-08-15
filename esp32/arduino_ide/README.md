@@ -11,5 +11,13 @@ The PIN layout of the ESP-WROOM-32 Board is present in the following image
     sudo adduser <username> dialout
     sudo chmod a+rw /dev/ttyUSB0
     ```
+* Problem for computer to recognize ESP32-CAM-MB (with micro-usb included) [^2], use the following commands:
+	```
+	systemctl stop brltty-udev.service
+	sudo systemctl mask brltty-udev.service
+	systemctl stop brltty.service
+	systemctl disable brltty.service
+	```
 
 [^1]: https://stackoverflow.com/questions/73923341/unable-to-flash-esp32-the-port-doesnt-exist
+[^2]: https://stackoverflow.com/questions/76188030/esp32-cam-does-not-appear-on-com-ports-in-windows-or-on-dev-tty-in-linux
