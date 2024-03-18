@@ -1,0 +1,3 @@
+[submodule "esp32/arduino_ide/CacheCompass_Tracker"]
+	path = esp32/arduino_ide/CacheCompass_Tracker
+	url = git@github.com:TheGoncaloSilva/CacheCompass_Tracker.git
